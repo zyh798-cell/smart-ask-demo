@@ -4,14 +4,24 @@
 
 > 这是一个学习与演示项目,使用的是程序自动生成的模拟数据,不是真实业务数据。
 
-## 它能做什么(示例输出)
+## 运行效果
+
+以下是真实运行记录(模型:LongCat-2.0,数据为程序生成的模拟数据):
 
 ```
 问> 毛利率最高的商品是什么?
-[RAG 命中口径] 毛利率:毛利润除以销售额 ...
-[生成SQL 第1次] SELECT p.name, ... ORDER BY gm DESC LIMIT 1
-答> 毛利率最高的商品是「笔记本支架」,约 62%。
+[RAG 命中口径] ['毛利率:毛利润除以销售额 ...', '毛利润:销售额减去成本 ...']
+[生成SQL 第1次] SELECT p.name AS 商品名, ROUND(SUM((p.price - p.cost) * o.qty) / SUM(p.price * o.qty) * 100, 2) || '%' AS 毛利率
+                FROM orders o JOIN products p ON o.product_id = p.id
+                GROUP BY p.name ORDER BY SUM((p.price - p.cost) * o.qty) / SUM(p.price * o.qty) DESC LIMIT 1
+答> 毛利率最高的商品是笔记本支架,其毛利率为 62.03%。
+
+问> 各城市销售额排名
+[生成SQL 第1次] SELECT c.city, SUM(p.price * o.qty) AS sales ... GROUP BY c.city ORDER BY sales DESC
+答> 1. 青岛 94,804  2. 上海 72,634  3. 北京 72,105  4. 济南 61,980  5. 潍坊 12,854  6. 烟台 9,405
 ```
+
+上述结果已与独立编写的 SQL 核对,数值一致。
 
 ## 工作流程
 
